@@ -32,13 +32,13 @@ const handleUp = () => {
 const handleCd = (input) => {
     const target = input.slice(3).trim()
     if (!target) {
-      logMsg({ msg: 'No path provided', type: 'error' })
+      logMsg({ msg: 'No path provided' })
       return
     }
     try {
       process.chdir(target)
     } catch (err) {
-      logMsg({ msg: `Failed to change directory: ${err.message}` })
+      logMsg({ msg: `Operation failed: ${err.message}` })
     }
 }
 
@@ -50,10 +50,10 @@ const handleLs = async () => {
         name: el.name,
         type: el.isDirectory() ? 'directory' : el.isFile() ? 'file' : 'other'
       }))
-      
+
       console.table(result)
     } catch (err) {
-      logMsg({ msg: `Failed to list directory: ${err.message}` })
+      logMsg({ msg: `Operation failed: ${err.message}` })
     }
 }
 
@@ -75,7 +75,7 @@ const handleCommand = async (input) => {
         await handleLs()
         break
       default:
-        logMsg({ msg: `Unknown command: ${input}`, type: 'error' })
+        logMsg({ msg: `Invalid input: ${input}` })
     }
   
     logMsg({ msg: process.cwd(), type: 'directory' })
