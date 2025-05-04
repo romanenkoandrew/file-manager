@@ -1,5 +1,8 @@
 import os from 'os'
 
+// export const dirname = os.homedir()
+export const dirname = import.meta.dirname
+
 const getOsCpus = () => {
     const cpus = os.cpus()
     return `Overall amount of CPUS is ${cpus.length}\n${cpus.map(el => el.model).join('\n')}`

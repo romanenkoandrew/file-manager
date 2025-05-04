@@ -1,8 +1,9 @@
 import { getUsernameFromArgs } from './getUserName.js'
 import { logMsg } from './utils.js'
-import process from 'node:process'
 import readline from 'readline'
-import { getOsInfo } from './os.js'
+import { getOsInfo, dirname } from './os.js'
+import path from 'node:path'
+import fs from 'node:fs/promises'
 
 const availableCommands = [
     '.exit'
@@ -25,20 +26,36 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
+process.chdir(dirname)
+
 username = getUsernameFromArgs()
-logMsg(username)
+logMsg({msg: username, type: 'welcome'})
+logMsg({msg: process.cwd(), type: 'directory'})
 
-rl.on('line', (line) => {
-    const trimmedLine = line.trim()
+rl.on('line', async (line) => {
+    const input = line.trim()
 
-    if (trimmedLine.includes('.exit')) {
+    if (input === '.exit') {
         handleExit()
-        return 
-    } else if (trimmedLine.startsWith('os')) {
-        const arg = trimmedLine.split(' ')[1]
-        rl.write(`${getOsInfo(arg)}\n`)
-        return
+    } else if (input.startsWith('os')) {
+        const arg = input.split(' ')[1]
+        logMsg({msg: getOsInfo(arg)})
+    } else if (input === 'up') {
+        const parentDir = path.dirname(process.cwd())
+        process.chdir(parentDir)
+    } else if (input.startsWith('cd')) {
+        const arg = input.split(' ').slice(1, input.length).join(' ')
+        process.chdir(arg)
+    } else if (input === 'ls') {
+        const dirInfo = await fs.readdir(process.cwd(), { withFileTypes: true })
+        const result = []
+        dirInfo.map(el => {
+            const type = el.isDirectory() ? 'directory' : el.isFile() ? 'file' : 'other' 
+            return result.push({name: el.name, type })
+        })
+        console.table(result)
     }
+    logMsg({msg: process.cwd(), type: 'directory'})
 })
 
 rl.on('SIGINT', handleExit)
