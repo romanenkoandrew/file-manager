@@ -4,6 +4,7 @@ import readline from 'readline'
 import { getOsInfo, dirname } from './os.js'
 import path from 'node:path'
 import fs from 'node:fs/promises'
+import { createFile, createDirectory, read, deleteFile, renameFile } from './fs.js'
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -30,7 +31,7 @@ const handleUp = () => {
 }
 
 const handleCd = (input) => {
-    const target = input.slice(3).trim()
+    const target = input.replace('cd', '').trim()
     if (!target) {
       logMsg({ msg: 'No path provided' })
       return
@@ -57,6 +58,83 @@ const handleLs = async () => {
     }
 }
 
+const handleCat = async (input) => {
+    const target = input.replace('cat', '').trim()
+    if (!target) {
+      logMsg({ msg: 'No path provided' })
+      return
+    }
+
+    try {
+        const data = await read(target)
+        logMsg({ msg: data })
+    } catch (err) {
+        logMsg({ msg: `Operation failed: ${err.message}` })
+    }
+}
+
+const handleAdd = async (input) => {
+    const name = input.replace('add', '').trim()
+    console.log('name', name)
+    if (!name) {
+        logMsg({ msg: 'No file name provided' })
+        return
+    }
+
+    await createFile(name)
+}
+
+const handleMkdir = async (input) => {
+    const name = input.replace('mkdir', '').trim()
+
+    if (!name) {
+        logMsg({ msg: 'No directory name provided' })
+        return
+    }
+
+    await createDirectory(name)
+}
+
+const handleRm = async (input) => {
+    const name = input.replace('rm', '').trim()
+
+    if (!name) {
+        logMsg({ msg: 'No file name provided' })
+        return
+    }
+
+    await deleteFile(name)
+}
+
+const handleRn = async (input) => {
+    const args = input.replace('rn', '').trim()
+    const splitedArgs = args.split(' ')
+
+    let oldName = splitedArgs[0]
+    let newName = splitedArgs[1]
+
+    if (splitedArgs.length !== 2) {
+        const match = args.match(/\.\w{2,5}/)
+    
+        if (!match) {
+            logMsg({ msg: 'The file must have the extension' })
+            return
+        }
+    
+        const extIndex = args.indexOf(match[0]) + match[0].length
+    
+        oldName = args.slice(0, extIndex).trim()
+        newName = args.slice(extIndex).trim()
+    }
+
+    if (!oldName || !newName) {
+        logMsg({ msg: 'Incorrect arguments' })
+        return
+    }
+
+    await renameFile(oldName, newName)
+}
+
 const handleCommand = async (input) => {
     switch (true) {
       case input === '.exit':
@@ -74,6 +152,21 @@ const handleCommand = async (input) => {
       case input === 'ls':
         await handleLs()
         break
+      case input.startsWith('cat'):
+        await handleCat(input)
+        break
+      case input.startsWith('add'):
+        await handleAdd(input)
+        break
+      case input.startsWith('mkdir'):
+        await handleMkdir(input)
+        break
+      case input.startsWith('rm'):
+        await handleRm(input)
+        break
+      case input.startsWith('rn'):
+        await handleRn(input)
+        break
       default:
         logMsg({ msg: `Invalid input: ${input}` })
     }
@@ -86,7 +179,12 @@ logMsg({msg: process.cwd(), type: 'directory'})
 
 rl.on('line', async (line) => {
     const input = line.trim()
-    await handleCommand(input)
+    try {
+        await handleCommand(input)
+    } catch (err) {
+        logMsg({ msg: `${err}` })
+        logMsg({ msg: 'Please enter next command.' })
+    }
 })
 
 rl.on('SIGINT', handleExit)
