@@ -1,7 +1,6 @@
 import os from 'os'
 
-// export const dirname = os.homedir()
-export const dirname = import.meta.dirname
+export const dirname = os.homedir()
 
 const getOsCpus = () => {
     const cpus = os.cpus()
