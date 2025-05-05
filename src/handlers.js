@@ -3,7 +3,7 @@ import path from 'path'
 import { createFile, createDirectory, read, deleteFile, renameFile, copyOrMoveFile } from './fs.js'
 import { hash } from './hash.js'
 import { compress, decompress } from './zip.js'
-import { logMsg } from './utils.js'
+import { getSrcAndDestFromArgs, logMsg } from './utils.js'
 
 const exit = (username) => {
     logMsg({ msg: username, type: 'finish' })
@@ -92,44 +92,28 @@ const removeFile = async (input) => {
 }
 
 const rename = async (input) => {
-    const args = input.replace('rn', '').trim()
-    const splitedArgs = args.split(' ')
-
-    let oldName = splitedArgs[0]
-    let newName = splitedArgs[1]
-
-    if (splitedArgs.length !== 2) {
-        const match = args.match(/\.\w{2,5}/)
-
-        if (!match) {
-            logMsg({ msg: 'The file must have the extension' })
-            return
-        }
-
-        const extIndex = args.indexOf(match[0]) + match[0].length
-
-        oldName = args.slice(0, extIndex).trim()
-        newName = args.slice(extIndex).trim()
+    const { src, dest, error } = getSrcAndDestFromArgs(input, 'rn')
+  
+    if (error) {
+      logMsg({ msg: error })
+      return
     }
 
-    if (!oldName || !newName) {
-        logMsg({ msg: 'Incorrect arguments' })
-        return
+    await renameFile(src, dest)
+  }
+  
+
+const copyOrMove = async (input, commandKeyword) => {
+    const { src, dest, error } = getSrcAndDestFromArgs(input, commandKeyword)
+  console.log('src', src)
+  console.log('dest', dest)
+  
+    if (error) {
+      logMsg({ msg: error })
+      return
     }
 
-    await renameFile(oldName, newName)
-}
-
-const copyOrMove = async (input, type) => {
-    const args = input.replace(type === 'copy' ? 'cp' : 'mv', '').trim()
-    const splitedArgs = args.split(' ')
-
-    if (splitedArgs.length !== 2) {
-        logMsg({ msg: 'Incorrect arguments' })
-        return
-    }
-
-    await copyOrMoveFile(splitedArgs[0], splitedArgs[1], type)
+    await copyOrMoveFile(src, dest, commandKeyword)
 }
 
 const hashFile = async (input) => {
@@ -144,16 +128,15 @@ const hashFile = async (input) => {
     logMsg({ msg: data })
 }
 
-const zipFile = async (input, type) => {
-    const args = input.replace(type, '').trim()
-    const splitedArgs = args.split(' ')
-
-    if (splitedArgs.length !== 2) {
-        logMsg({ msg: 'Incorrect arguments' })
-        return
+const zipFile = async (input, commandKeyword) => {
+    const { src, dest, error } = getSrcAndDestFromArgs(input, commandKeyword)
+  
+    if (error) {
+      logMsg({ msg: error })
+      return
     }
 
-    type === 'compress' ? await compress(splitedArgs[0], splitedArgs[1]) : decompress(splitedArgs[0], splitedArgs[1])
+    commandKeyword === 'compress' ? await compress(src, dest) : await decompress(src, dest)
 }
 
 export const handlers = {

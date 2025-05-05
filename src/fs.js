@@ -52,13 +52,12 @@ export const renameFile = async (oldName, newName) => {
     await pathNotExists(newName)
     await rename(oldName, newName)
     logMsg({msg: `File renamed from ${oldName} into ${newName} successfully`})
-
   } catch {
       throw new Error('FS operation failed')
   }
 }
 
-export const copyOrMoveFile = async (src, dest, type = 'copy') => {
+export const copyOrMoveFile = async (src, dest, commandKeyword = 'cp') => {
   try {
     await access(src)
     await pathNotExists(dest)
@@ -67,11 +66,11 @@ export const copyOrMoveFile = async (src, dest, type = 'copy') => {
     const writeStream = createWriteStream(dest)
     await pipeline(readStream, writeStream)
 
-    if (type === 'move') {
+    if (commandKeyword === 'mv') {
       await unlink(src)
     }
 
-    const text = type === 'move' ? 'moved' : 'copied'
+    const text = commandKeyword === 'mv' ? 'moved' : 'copied'
 
     logMsg({msg: `File ${text} from ${src} to ${dest} successfully`})
   } catch {

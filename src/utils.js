@@ -27,3 +27,26 @@ export const pathNotExists = async (path) => {
         if (err.code !== 'ENOENT') throw err
     }
 }
+
+export const getSrcAndDestFromArgs = (input, commandKeyword) => {
+    const rawArgs = input.replace(new RegExp(`^${commandKeyword}\\s+`), '').trim()
+    let error
+  
+    const plainArgs = rawArgs.split(' ')
+
+    if (plainArgs.length === 2) {
+      return { src: plainArgs[0], dest: plainArgs[1], error }
+    }
+  
+    const match = rawArgs.match(/"(.+?)"\s+"(.+?)"/)
+
+    if (match) {
+      const [, src, dest] = match
+      return { src, dest, error }
+    }
+
+    error = `Incorrect arguments. Example:\n ${commandKeyword} file1.txt file2.txt\n ${commandKeyword} "file 1.txt" "file 2.txt"`
+  
+    return { error }
+  }
+  

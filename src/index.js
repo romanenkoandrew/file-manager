@@ -51,10 +51,10 @@ const handleCommand = async (input) => {
         await handlers.rename(input)
         break
       case input.startsWith('cp'):
-        await handlers.copyOrMove(input, 'copy')
+        await handlers.copyOrMove(input, 'cp')
         break
       case input.startsWith('mv'):
-        await handlers.copyOrMove(input, 'move')
+        await handlers.copyOrMove(input, 'mv')
         break
       case input.startsWith('hash'):
           await handlers.hashFile(input)
