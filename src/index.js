@@ -4,7 +4,7 @@ import readline from 'readline'
 import { getOsInfo, dirname } from './os.js'
 import path from 'node:path'
 import fs from 'node:fs/promises'
-import { createFile, createDirectory, read, deleteFile, renameFile } from './fs.js'
+import { createFile, createDirectory, read, deleteFile, renameFile, copyOrMoveFile } from './fs.js'
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -135,6 +135,18 @@ const handleRn = async (input) => {
     await renameFile(oldName, newName)
 }
 
+const handleCpAndMv = async (input, type) => {
+  const args = input.replace(type === 'copy' ? 'cp' : 'mv', '').trim()
+  const splitedArgs = args.split(' ')
+
+  if (splitedArgs.length !== 2) {
+      logMsg({ msg: 'Incorrect arguments' })
+      return
+  }
+
+  await copyOrMoveFile(splitedArgs[0], splitedArgs[1], type)
+}
+
 const handleCommand = async (input) => {
     switch (true) {
       case input === '.exit':
@@ -167,11 +179,15 @@ const handleCommand = async (input) => {
       case input.startsWith('rn'):
         await handleRn(input)
         break
+      case input.startsWith('cp'):
+        await handleCpAndMv(input, 'copy')
+        break
+      case input.startsWith('mv'):
+        await handleCpAndMv(input, 'move')
+        break
       default:
         logMsg({ msg: `Invalid input: ${input}` })
     }
-  
-    logMsg({ msg: process.cwd(), type: 'directory' })
 }
 
 logMsg({msg: username, type: 'welcome'})
@@ -181,6 +197,7 @@ rl.on('line', async (line) => {
     const input = line.trim()
     try {
         await handleCommand(input)
+        logMsg({ msg: process.cwd(), type: 'directory' })
     } catch (err) {
         logMsg({ msg: `${err}` })
         logMsg({ msg: 'Please enter next command.' })

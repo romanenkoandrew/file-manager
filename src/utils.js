@@ -1,3 +1,5 @@
+import { access } from 'fs/promises'
+
 const messages = {
     welcome: 'Welcome to the File Manager,',
     directory: 'You are currently in',
@@ -16,3 +18,12 @@ export const logMsg = ({ msg, type }) => {
             return process.stdout.write(`${msg}\n`)
     }
 } 
+
+export const pathNotExists = async (path) => {
+    try {
+        await access(path)
+        throw new Error()
+    } catch (err) {
+        if (err.code !== 'ENOENT') throw err
+    }
+}

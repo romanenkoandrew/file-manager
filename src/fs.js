@@ -1,8 +1,9 @@
 
-import { createReadStream } from 'fs'
-import { writeFile, mkdir, rm, rename, access, cp } from 'fs/promises'
+import { createReadStream, createWriteStream } from 'fs'
+import { writeFile, mkdir, rm, rename, access, unlink, } from 'fs/promises'
+import { pipeline } from 'stream/promises'
 import { join } from 'path'
-import { logMsg } from './utils.js'
+import { logMsg, pathNotExists } from './utils.js'
 
 export const read = async (path) => {
     return new Promise((resolve, reject) => {
@@ -46,22 +47,33 @@ export const deleteFile = async (name) => {
 }
 
 export const renameFile = async (oldName, newName) => {
-  const oldPath = join(process.cwd(), oldName)
-  const newPath = join(process.cwd(), newName)
-
   try {
-    await access(oldPath)
-
-    try {
-        await access(newPath);
-        throw new Error();
-    } catch (err) {
-        if (err.code !== 'ENOENT') throw err
-    }
-
-    await rename(oldPath, newPath)
+    await access(oldName)
+    await pathNotExists(newName)
+    await rename(oldName, newName)
     logMsg({msg: `File renamed from ${oldName} into ${newName} successfully`})
 
+  } catch {
+      throw new Error('FS operation failed')
+  }
+}
+
+export const copyOrMoveFile = async (src, dest, type = 'copy') => {
+  try {
+    await access(src)
+    await pathNotExists(dest)
+
+    const readStream = createReadStream(src)
+    const writeStream = createWriteStream(dest)
+    await pipeline(readStream, writeStream)
+
+    if (type === 'move') {
+      await unlink(src)
+    }
+
+    const text = type === 'move' ? 'moved' : 'copied'
+
+    logMsg({msg: `File ${text} from ${src} to ${dest} successfully`})
   } catch {
       throw new Error('FS operation failed')
   }
