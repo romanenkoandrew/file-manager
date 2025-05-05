@@ -5,6 +5,7 @@ import { getOsInfo, dirname } from './os.js'
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import { createFile, createDirectory, read, deleteFile, renameFile, copyOrMoveFile } from './fs.js'
+import { hash } from './hash.js'
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -147,6 +148,18 @@ const handleCpAndMv = async (input, type) => {
   await copyOrMoveFile(splitedArgs[0], splitedArgs[1], type)
 }
 
+const handleHash = async (input) => {
+  const name = input.replace('hash', '').trim()
+
+  if (!name) {
+      logMsg({ msg: 'No file name provided' })
+      return
+  }
+
+  const data = await hash(name)
+  logMsg({ msg: data })
+}
+
 const handleCommand = async (input) => {
     switch (true) {
       case input === '.exit':
@@ -185,6 +198,9 @@ const handleCommand = async (input) => {
       case input.startsWith('mv'):
         await handleCpAndMv(input, 'move')
         break
+      case input.startsWith('hash'):
+          await handleHash(input)
+          break
       default:
         logMsg({ msg: `Invalid input: ${input}` })
     }
