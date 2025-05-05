@@ -18,56 +18,34 @@ const handleOsCommand = (input) => {
     logMsg({ msg: info })
 }
 
+const commands = {
+  '.exit': () => handlers.exit(username),
+  'os': handleOsCommand,
+  'up': handlers.up,
+  'cd': handlers.cd,
+  'ls': handlers.ls,
+  'cat': handlers.readFile,
+  'add': handlers.addFile,
+  'mkdir': handlers.addDirectory,
+  'rm': handlers.removeFile,
+  'rn': handlers.rename,
+  'cp': (input) => handlers.copyOrMove(input, 'cp'),
+  'mv': (input) => handlers.copyOrMove(input, 'mv'),
+  'hash': handlers.hashFile,
+  'compress': (input) => handlers.zipFile(input, 'compress'),
+  'decompress': (input) => handlers.zipFile(input, 'decompress')
+}
+
 const handleCommand = async (input) => {
-    switch (true) {
-      case input === '.exit':
-        handlers.exit(username)
-        break
-      case input.startsWith('os'):
-        handleOsCommand(input)
-        break
-      case input === 'up':
-        handlers.up()
-        break
-      case input.startsWith('cd'):
-        handlers.cd(input)
-        break
-      case input === 'ls':
-        await handlers.ls()
-        break
-      case input.startsWith('cat'):
-        await handlers.readFile(input)
-        break
-      case input.startsWith('add'):
-        await handlers.addFile(input)
-        break
-      case input.startsWith('mkdir'):
-        await handlers.addDirectory(input)
-        break
-      case input.startsWith('rm'):
-        await handlers.removeFile(input)
-        break
-      case input.startsWith('rn'):
-        await handlers.rename(input)
-        break
-      case input.startsWith('cp'):
-        await handlers.copyOrMove(input, 'cp')
-        break
-      case input.startsWith('mv'):
-        await handlers.copyOrMove(input, 'mv')
-        break
-      case input.startsWith('hash'):
-          await handlers.hashFile(input)
-          break
-      case input.startsWith('compress'):
-          await handlers.zipFile(input, 'compress')
-          break
-      case input.startsWith('decompress'):
-          await handlers.zipFile(input, 'decompress')
-          break
-      default:
-        logMsg({ msg: `Invalid input: ${input}` })
-    }
+  const [cmd] = input.split(' ')
+
+  const handler = commands[cmd]
+
+  if (handler) {
+    await handler(input)
+  } else {
+    logMsg({ msg: `Invalid input: ${input}` });
+  }
 }
 
 logMsg({msg: username, type: 'welcome'})
