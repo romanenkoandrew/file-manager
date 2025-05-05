@@ -6,6 +6,7 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 import { createFile, createDirectory, read, deleteFile, renameFile, copyOrMoveFile } from './fs.js'
 import { hash } from './hash.js'
+import { compress, decompress } from './zip.js'
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -160,6 +161,18 @@ const handleHash = async (input) => {
   logMsg({ msg: data })
 }
 
+const handleZip = async (input, type) => {
+  const args = input.replace(type, '').trim()
+  const splitedArgs = args.split(' ')
+
+  if (splitedArgs.length !== 2) {
+      logMsg({ msg: 'Incorrect arguments' })
+      return
+  }
+
+  type === 'compress' ? await compress(splitedArgs[0], splitedArgs[1]) : decompress(splitedArgs[0], splitedArgs[1])
+}
+
 const handleCommand = async (input) => {
     switch (true) {
       case input === '.exit':
@@ -200,6 +213,12 @@ const handleCommand = async (input) => {
         break
       case input.startsWith('hash'):
           await handleHash(input)
+          break
+      case input.startsWith('compress'):
+          await handleZip(input, 'compress')
+          break
+      case input.startsWith('decompress'):
+          await handleZip(input, 'decompress')
           break
       default:
         logMsg({ msg: `Invalid input: ${input}` })

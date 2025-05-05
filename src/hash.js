@@ -3,9 +3,13 @@ import { createHash } from 'crypto'
 import { pipeline } from 'stream/promises'
 
 export const hash = async (path) => {
-    const hash = createHash('sha256').setEncoding('hex')
-    const stream = createReadStream(path)
-    
-    await pipeline(stream, hash)
-    return hash.digest('hex')
+    try {
+        const hash = createHash('sha256').setEncoding('hex')
+        const stream = createReadStream(path)
+        
+        await pipeline(stream, hash)
+        return hash.digest('hex')
+    } catch {
+        throw new Error('Hash operation failed')
+    }
 }
